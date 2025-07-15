@@ -7,7 +7,9 @@ import os
 try:
     from dotenv import load_dotenv
     load_dotenv()
+    st.info("✅ Environment variables loaded from .env file")
 except ImportError:
+    st.warning("⚠️ python-dotenv not installed. Install with: pip install python-dotenv")
     pass
 except Exception as e:
     st.warning(f"⚠️ Could not load .env file: {str(e)}")
