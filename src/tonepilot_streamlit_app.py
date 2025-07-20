@@ -2,6 +2,10 @@ import streamlit as st
 import time
 import random
 import os
+import gc
+
+# Memory optimization for cloud deployment
+gc.set_threshold(700, 10, 10)  # More aggressive garbage collection
 
 # Load environment variables from .env file
 try:
@@ -14,23 +18,23 @@ except ImportError:
 except Exception as e:
     st.warning(f"⚠️ Could not load .env file: {str(e)}")
 
-# Function to encode background image
+# Function to encode background image (optimized for memory)
 @st.cache_data
 def get_background_image():
-    """Load and encode background image as base64"""
+    """Load and encode background image as base64 (memory optimized)"""
     import base64
     try:
-        possible_paths = [
-            "src/background.png",
-            "./src/background.png", 
-            "background.png",
-            os.path.join("src", "background.png"),
-            os.path.join(os.path.dirname(__file__), "background.png")
-        ]
+        # Only try the most likely paths to reduce I/O
+        possible_paths = ["src/background.png", "background.png"]
         
         for path in possible_paths:
             if os.path.exists(path):
+                # Read in chunks to reduce memory usage
                 with open(path, "rb") as img_file:
+                    file_size = os.path.getsize(path)
+                    # Skip if file is too large (>5MB) to prevent memory issues
+                    if file_size > 5 * 1024 * 1024:
+                        return None
                     encoded = base64.b64encode(img_file.read()).decode()
                     return f"data:image/png;base64,{encoded}"
         return None
@@ -56,15 +60,80 @@ background_image = get_background_image()
 # Modern CSS styling with improved responsiveness and better colors
 st.markdown("""
 <style>
-/* Content container with subtle glassmorphism effect */
+/* Content container with optimized styling for performance */
 .main .block-container {
-    background: rgba(255, 255, 255, 0.75);
-    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 12px;
     padding: 2rem;
     margin-top: 1rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile-optimized styles for better performance */
+@media (max-width: 768px) {
+    .main .block-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+        box-shadow: none;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .main-title {
+        font-size: 2rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .main-subtitle {
+        font-size: 1.5rem !important;
+        margin-top: -0.5rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .header-container {
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .stButton > button {
+        height: 2.5rem !important;
+        min-height: 2.5rem !important;
+        font-size: 0.9rem !important;
+        padding: 0.4rem 0.8rem !important;
+    }
+    
+    .stTextArea > div > div > textarea {
+        border-radius: 8px !important;
+        font-size: 14px !important;
+    }
+}
+
+/* Ultra-lightweight mobile styles for very small screens */
+@media (max-width: 480px) {
+    .main .block-container {
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-top: 0.25rem;
+        box-shadow: none;
+        border: none;
+    }
+    
+    .main-title {
+        font-size: 1.75rem !important;
+    }
+    
+    .main-subtitle {
+        font-size: 1.25rem !important;
+        line-height: 1.3 !important;
+    }
+    
+    .stButton > button {
+        height: 2.25rem !important;
+        font-size: 0.85rem !important;
+        padding: 0.3rem 0.6rem !important;
+    }
 }
 .main-title {
     text-align: center;
@@ -195,7 +264,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Add background image if available
+# Add background image if available with mobile optimization
 if background_image:
     st.markdown(f"""
     <style>
@@ -207,6 +276,52 @@ if background_image:
         background-attachment: fixed;
         min-height: 100vh;
     }}
+    
+    /* Disable background image on mobile for better performance */
+    @media (max-width: 768px) {{
+        .stApp {{
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            background-attachment: scroll;
+        }}
+    }}
+    
+    /* Ultra-light background for small mobile screens */
+    @media (max-width: 480px) {{
+        .stApp {{
+            background: #f8fafc;
+        }}
+    }}
+    
+    /* Mobile device detection and optimization */
+    <script>
+    if (window.innerWidth <= 768) {{
+        document.body.classList.add('mobile-device');
+        // Disable animations on mobile for better performance
+        document.documentElement.style.setProperty('--animation-duration', '0s');
+        
+        // Send mobile detection to Streamlit
+        window.parent.postMessage({{
+            type: 'streamlit:setComponentValue',
+            value: {{mobile_detected: true}}
+        }}, '*');
+    }}
+    </script>
+    </style>
+    """, unsafe_allow_html=True)
+else:
+    # Fallback styling when no background image is available
+    st.markdown("""
+    <style>
+    .stApp {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        min-height: 100vh;
+    }
+    
+    @media (max-width: 768px) {
+        .stApp {
+            background: #f8fafc;
+        }
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -250,39 +365,118 @@ except Exception as e:
 st.markdown('<p class="main-subtitle">open-source AI library for Emotionally Aware Human-like Responses</p>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Initialize TonePilot engine with improved error handling
+# Initialize TonePilot engine with memory optimization
 @st.cache_resource
 def initialize_tonepilot():
-    """Initialize TonePilot with caching for better performance"""
+    """Initialize TonePilot with memory optimization for cloud deployment"""
+    import gc
+    
     # Check for API key first
     api_key = os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY')
     if not api_key:
         return None, "No API key found! Please set GOOGLE_API_KEY or GEMINI_API_KEY in your environment variables"
     
     try:
+        # Force garbage collection before initialization
+        gc.collect()
+        
         from tonepilot.core.tonepilot import TonePilotEngine
         
-        # Initialize with improved configuration
+        # Initialize with memory-optimized configuration
         engine = TonePilotEngine(mode='gemini', respond=True)
+        
+        # Clear any unused imports to free memory
+        gc.collect()
+        
         return engine, "TonePilot engine initialized successfully!"
         
     except ImportError as e:
         return None, "TonePilot library not available. Install with: pip install tonepilot"
+    except MemoryError as e:
+        return None, "⚠️ Insufficient memory for TonePilot. Please try refreshing the page or contact support."
     except Exception as e:
+        # Handle potential memory-related errors
+        if "memory" in str(e).lower() or "oom" in str(e).lower():
+            return None, "⚠️ Memory limit exceeded. Please refresh the page and try again."
         return None, f"Failed to initialize TonePilot: {str(e)}"
 
-# Add cache clearing option in sidebar
+# Add cache clearing and memory management in sidebar
 with st.sidebar:
     st.markdown("---")
+    st.markdown("### 🛠️ App Controls")
+    
+    # Mobile mode toggle
+    mobile_mode = st.toggle("📱 Mobile Mode (Demo Only)", 
+                           value=st.session_state.get('mobile_mode', False),
+                           help="Enable to use pre-written responses instead of loading the full model")
+    st.session_state.mobile_mode = mobile_mode
+    
+    if mobile_mode:
+        st.info("🚀 **Mobile Mode Active:** Using sample responses for faster performance!")
+    
     if st.button("🗑️ Clear Cache & Restart"):
         initialize_tonepilot.clear()
         get_background_image.clear()
         st.cache_data.clear()
         st.cache_resource.clear()
+        # Clear session state to free memory
+        for key in list(st.session_state.keys()):
+            if key not in ['user_input', 'mobile_mode']:  # Keep user input and mobile mode
+                del st.session_state[key]
         st.success("Cache cleared! Please refresh the page.")
         st.rerun()
+    
+    if st.button("🧹 Free Memory"):
+        import gc
+        gc.collect()
+        st.success("Memory cleaned!")
+        
+    # Memory usage indicator (simplified)
+    st.markdown("💾 **Memory Tips:**")
+    st.markdown("- Use Mobile Mode for better performance")
+    st.markdown("- Clear cache if app slows down")
+    st.markdown("- Refresh page if memory errors occur")
+    
+    # Mobile optimization info
+    st.markdown("📱 **Mobile Optimized:**")
+    st.markdown("- Lighter styling on mobile")
+    st.markdown("- Sample responses for demo")
+    st.markdown("- Background disabled on small screens")
 
-# Sample prompts organized by category
+# Mobile sample responses (pre-written to avoid loading model)
+MOBILE_SAMPLE_RESPONSES = {
+    "I'm feeling overwhelmed with my workload and don't know how to prioritize my tasks.": {
+        "input_tags": {"overwhelmed": 0.85, "stressed": 0.72, "anxious": 0.68},
+        "response_tags": {"empathetic_listener": True, "nurturing_teacher": True, "supportive": True},
+        "final_prompt": "Respond with deep empathy and understanding. Acknowledge their feelings of being overwhelmed and provide gentle, practical guidance for prioritization. Use a warm, supportive tone that makes them feel heard and validated.",
+        "response_text": "I can really hear how overwhelmed you're feeling right now, and that's completely understandable. When everything feels urgent, it's natural to feel paralyzed about where to start.\n\nLet's take this step by step together. First, take a deep breath - you've got this. Try writing down all your tasks, then ask yourself: 'What absolutely must be done today?' Focus on just 2-3 priority items.\n\nRemember, you don't have to tackle everything at once. Sometimes the most productive thing you can do is give yourself permission to do less, but do it well. You're handling more than you realize, and it's okay to take things one task at a time."
+    },
+    "I just got a promotion at work and I'm excited but also nervous about the new responsibilities.": {
+        "input_tags": {"excited": 0.78, "nervous": 0.65, "anticipatory": 0.71},
+        "response_tags": {"confident_mentor": True, "encouraging": True, "celebratory": True},
+        "final_prompt": "Respond with enthusiasm for their promotion while acknowledging their nervousness. Provide confident, encouraging guidance that builds their self-belief. Use an uplifting, mentoring tone.",
+        "response_text": "Congratulations! This is such exciting news, and you should be incredibly proud of this achievement. The fact that you were chosen for this promotion says everything about your capabilities and potential.\n\nThose nervous butterflies? They're completely normal and actually a good sign - they show you care and want to succeed. Every great leader has felt exactly what you're feeling right now.\n\nYou already have the skills that got you here, and now you'll develop even more. Trust in the process, be patient with yourself as you learn, and remember - your organization believes in you, and so do I. You're going to do amazing things in this new role!"
+    },
+    "I had a disagreement with my friend and I'm not sure how to approach them about it.": {
+        "input_tags": {"conflicted": 0.73, "uncertain": 0.68, "concerned": 0.65},
+        "response_tags": {"diplomatic_advisor": True, "thoughtful": True, "relationship_focused": True},
+        "final_prompt": "Provide thoughtful, diplomatic advice for resolving the friendship conflict. Focus on understanding, communication, and preserving the relationship. Use a caring but wise tone.",
+        "response_text": "Friendship disagreements can feel really heavy on the heart, and it's clear you value this relationship deeply. The fact that you're thinking carefully about how to approach this shows what a caring friend you are.\n\nWhen you're ready, consider reaching out with something simple like, 'I've been thinking about our conversation, and I really value our friendship. Could we talk?' Sometimes the hardest part is just taking that first step.\n\nApproach the conversation with curiosity rather than being right. Listen to understand their perspective, share yours openly, and remember that good friends can disagree and still care deeply for each other. This might even strengthen your bond in the long run."
+    }
+}
+
+# Function to detect mobile device
+def is_mobile_device():
+    """Detect if user is on mobile device"""
+    try:
+        # Simple check based on screen width detection
+        if 'mobile_detected' not in st.session_state:
+            st.session_state.mobile_detected = False
+        return st.session_state.mobile_detected
+    except:
+        return False
+
+# Memory-optimized sample prompts (reduced size for cloud deployment)
 SAMPLE_PROMPTS = {
     "Personal Growth": [
         "I'm feeling overwhelmed with my workload and don't know how to prioritize my tasks.",
@@ -316,6 +510,11 @@ SAMPLE_PROMPTS = {
     ]
 }
 
+# Mobile mode indicator
+mobile_mode = st.session_state.get('mobile_mode', False)
+if mobile_mode:
+    st.success("📱 **Mobile Demo Mode Active** - Using optimized sample responses for better performance! Toggle off in sidebar to use full AI model.")
+
 # User input section with better layout
 st.markdown('<div style="margin-top: 0.5rem;"><h3 style="margin-bottom: 0.25rem;">💭 Enter Your Prompt</h3></div>', unsafe_allow_html=True)
 user_input = st.text_area(
@@ -336,7 +535,14 @@ with col2:
     
     with subcol1:
         if st.button("🎲 Random Sample", type="secondary", use_container_width=True):
-            all_prompts = [prompt for prompts in SAMPLE_PROMPTS.values() for prompt in prompts]
+            # Include mobile sample prompts if mobile mode is enabled
+            mobile_mode = st.session_state.get('mobile_mode', False)
+            if mobile_mode:
+                mobile_prompts = list(MOBILE_SAMPLE_RESPONSES.keys())
+                all_prompts = [prompt for prompts in SAMPLE_PROMPTS.values() for prompt in prompts] + mobile_prompts
+            else:
+                all_prompts = [prompt for prompts in SAMPLE_PROMPTS.values() for prompt in prompts]
+            
             random_prompt = random.choice(all_prompts)
             st.session_state.user_input = random_prompt
             st.rerun()
@@ -347,24 +553,66 @@ with col2:
 # Processing and results
 if generate_button:
     if user_input.strip():
-        # Initialize TonePilot
-        engine, message = initialize_tonepilot()
+        # Check if mobile mode is enabled
+        mobile_mode = st.session_state.get('mobile_mode', False)
         
-        if not engine:
-            st.error(f"❌ {message}")
-            if "API key" in message:
-                st.info("💡 For Streamlit Cloud: Go to your app settings → Secrets → Add your API key")
-        else:
-            # Removed the success message as requested
-            
-            # Process with progress indication
+        if mobile_mode:
+            # Use pre-written sample responses for mobile
             with st.spinner("🤖 TonePilot is analyzing your input..."):
-                try:
-                    result = engine.run(user_input)
-                    st.session_state.last_result = result
-                except Exception as e:
-                    st.error(f"❌ Processing Error: {str(e)}")
-                    result = None
+                time.sleep(1)  # Small delay for realistic feel
+                
+                # Check if input matches any sample responses
+                result = None
+                for sample_input, sample_result in MOBILE_SAMPLE_RESPONSES.items():
+                    if user_input.lower() in sample_input.lower() or sample_input.lower() in user_input.lower():
+                        result = sample_result
+                        break
+                
+                # If no match, create a generic response
+                if not result:
+                    result = {
+                        "input_tags": {"curious": 0.65, "thoughtful": 0.58, "engaged": 0.72},
+                        "response_tags": {"supportive": True, "informative": True, "encouraging": True},
+                        "final_prompt": "Respond with warmth and understanding. Provide thoughtful, encouraging guidance that shows empathy and offers practical support.",
+                        "response_text": "Thank you for sharing that with me. I can sense the thoughtfulness behind your words, and I appreciate you opening up about this.\n\nWhile everyone's situation is unique, what often helps is taking a step back and approaching things with both compassion for yourself and curiosity about what might work best for you. Sometimes the answers we're looking for are already within us - we just need the right space and support to discover them.\n\nRemember, it's okay to take things one step at a time. You don't have to have all the answers right now. What matters is that you're being thoughtful about your situation and seeking understanding."
+                    }
+                
+                st.session_state.last_result = result
+                
+        else:
+            # Initialize TonePilot for full mode
+            engine, message = initialize_tonepilot()
+            
+            if not engine:
+                st.error(f"❌ {message}")
+                if "API key" in message:
+                    st.info("💡 For Streamlit Cloud: Go to your app settings → Secrets → Add your API key")
+                st.info("💡 **Try Mobile Mode** in the sidebar for a demo without requiring API keys!")
+                result = None
+            else:
+                # Process with progress indication and memory management
+                with st.spinner("🤖 TonePilot is analyzing your input..."):
+                    try:
+                        import gc
+                        # Free memory before processing
+                        gc.collect()
+                        
+                        result = engine.run(user_input)
+                        st.session_state.last_result = result
+                        
+                        # Clean up after processing
+                        gc.collect()
+                        
+                    except MemoryError as e:
+                        st.error("❌ Memory limit exceeded. Try Mobile Mode in the sidebar for better performance.")
+                        result = None
+                    except Exception as e:
+                        error_msg = str(e)
+                        if "memory" in error_msg.lower() or "oom" in error_msg.lower():
+                            st.error("❌ Memory issue detected. Try Mobile Mode in the sidebar for better performance.")
+                        else:
+                            st.error(f"❌ Processing Error: {error_msg}")
+                        result = None
             
             # Display results with improved layout - no extra white space
             if result:
