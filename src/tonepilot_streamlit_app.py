@@ -19,7 +19,7 @@ except Exception as e:
     st.warning(f"⚠️ Could not load .env file: {str(e)}")
 
 # Function to encode background image (optimized for memory)
-@st.cache_data
+@st.cache_data(ttl=3600)  # Cache for 1 hour to prevent memory buildup
 def get_background_image():
     """Load and encode background image as base64 (memory optimized)"""
     import base64
@@ -366,7 +366,7 @@ st.markdown('<p class="main-subtitle">open-source AI library for Emotionally Awa
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Initialize TonePilot engine with memory optimization
-@st.cache_resource
+@st.cache_resource(show_spinner="Loading TonePilot AI Model...")
 def initialize_tonepilot():
     """Initialize TonePilot with memory optimization for cloud deployment"""
     import gc
@@ -431,11 +431,23 @@ with st.sidebar:
         gc.collect()
         st.success("Memory cleaned!")
         
-    # Memory usage indicator (simplified)
-    st.markdown("💾 **Memory Tips:**")
+    # Cache status and memory info
+    st.markdown("💾 **Cache Info:**")
+    
+    # Show current mode
+    mobile_mode = st.session_state.get('mobile_mode', False)
+    if mobile_mode:
+        st.markdown("📱 Mode: Mobile Demo (No AI model)")
+    else:
+        st.markdown("🖥️ Mode: Full AI Model")
+        
+    st.markdown("🖼️ Background: Auto-cached (1hr)")
+    st.markdown("🧠 AI Model: Cached when used")
+    
+    st.markdown("**Memory Tips:**")
     st.markdown("- Use Mobile Mode for better performance")
     st.markdown("- Clear cache if app slows down")
-    st.markdown("- Refresh page if memory errors occur")
+    st.markdown("- Background cached for 1 hour")
     
     # Mobile optimization info
     st.markdown("📱 **Mobile Optimized:**")
