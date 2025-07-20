@@ -14,25 +14,33 @@ except ImportError:
 except Exception as e:
     st.warning(f"⚠️ Could not load .env file: {str(e)}")
 
-# Function to encode background image (optimized for memory)
+# Function to encode background image (cloud optimized)
 @st.cache_data(ttl=3600)  # Cache for 1 hour to prevent memory buildup
 def get_background_image():
-    """Load and encode background image as base64 (memory optimized)"""
+    """Load and encode background image as base64 (cloud optimized)"""
     import base64
     try:
-        # Only try the most likely paths to reduce I/O
-        possible_paths = ["src/background.png", "background.png"]
+        # Cloud-optimized path detection
+        if RUNNING_ON_CLOUD:
+            possible_paths = ["src/background.png"]  # Simplified for cloud
+        else:
+            possible_paths = ["src/background.png", "background.png"]
         
         for path in possible_paths:
-            if os.path.exists(path):
-                # Read in chunks to reduce memory usage
-                with open(path, "rb") as img_file:
+            try:
+                if os.path.exists(path):
                     file_size = os.path.getsize(path)
-                    # Skip if file is too large (>5MB) to prevent memory issues
-                    if file_size > 5 * 1024 * 1024:
+                    # More conservative size limit for cloud
+                    max_size = 3 * 1024 * 1024 if RUNNING_ON_CLOUD else 5 * 1024 * 1024
+                    if file_size > max_size:
                         return None
-                    encoded = base64.b64encode(img_file.read()).decode()
-                    return f"data:image/png;base64,{encoded}"
+                    
+                    with open(path, "rb") as img_file:
+                        encoded = base64.b64encode(img_file.read()).decode()
+                        return f"data:image/png;base64,{encoded}"
+            except (OSError, IOError):
+                # Skip files that can't be read (common on cloud)
+                continue
         return None
     except Exception as e:
         return None
@@ -49,6 +57,13 @@ st.set_page_config(
         'About': "TonePilot - An emotionally intelligent prompt generator for human-like responses"
     }
 )
+
+# Detect if running on Streamlit Cloud and optimize accordingly
+RUNNING_ON_CLOUD = os.getenv('STREAMLIT_SHARING_MODE') or '/mount/src' in os.getcwd()
+
+if RUNNING_ON_CLOUD:
+    # Reduce file watching on cloud to prevent inotify issues
+    os.environ['STREAMLIT_SERVER_FILE_WATCHER_TYPE'] = 'none'
 
 # Get background image
 background_image = get_background_image()
@@ -420,20 +435,31 @@ with st.sidebar:
     # Cache status and memory info
     st.markdown("💾 **Cache Info:**")
     
-    # Show current mode
+    # Show current mode and environment
     mobile_mode = st.session_state.get('mobile_mode', False)
     if mobile_mode:
         st.markdown("📱 Mode: Mobile Demo (No AI model)")
     else:
         st.markdown("🖥️ Mode: Full AI Model")
+    
+    if RUNNING_ON_CLOUD:
+        st.markdown("☁️ Environment: Streamlit Cloud")
+        st.markdown("🔧 File watching: Disabled")
+    else:
+        st.markdown("💻 Environment: Local")
         
     st.markdown("🖼️ Background: Auto-cached (1hr)")
     st.markdown("🧠 AI Model: Cached when used")
     
     st.markdown("**Performance Tips:**")
-    st.markdown("- Use Mobile Mode for instant responses")
-    st.markdown("- AI model loads once and stays cached")
-    st.markdown("- Clear cache only if issues occur")
+    if RUNNING_ON_CLOUD:
+        st.markdown("- Cloud optimized for file watching issues")
+        st.markdown("- Use Mobile Mode for best cloud performance")
+        st.markdown("- Background disabled on mobile for memory")
+    else:
+        st.markdown("- Use Mobile Mode for instant responses")
+        st.markdown("- AI model loads once and stays cached")
+        st.markdown("- Clear cache only if issues occur")
     
     # Mobile optimization info
     st.markdown("📱 **Mobile Optimized:**")
