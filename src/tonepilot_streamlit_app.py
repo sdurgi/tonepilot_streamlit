@@ -2,10 +2,6 @@ import streamlit as st
 import time
 import random
 import os
-import gc
-
-# Memory optimization for cloud deployment
-gc.set_threshold(700, 10, 10)  # More aggressive garbage collection
 
 # Load environment variables from .env file
 try:
@@ -365,40 +361,33 @@ except Exception as e:
 st.markdown('<p class="main-subtitle">open-source AI library for Emotionally Aware Human-like Responses</p>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Initialize TonePilot engine with memory optimization
-@st.cache_resource(show_spinner="Loading TonePilot AI Model...")
+# Initialize TonePilot engine with simple, effective caching
+@st.cache_resource
+def get_tonepilot_engine():
+    """Get cached TonePilot engine - only loads once per session"""
+    try:
+        from tonepilot.core.tonepilot import TonePilotEngine
+        # Simple initialization without complex memory management that breaks caching
+        engine = TonePilotEngine(mode='gemini', respond=True)
+        return engine
+    except Exception as e:
+        # Return None if initialization fails - let calling code handle errors
+        return None
+
 def initialize_tonepilot():
-    """Initialize TonePilot with memory optimization for cloud deployment"""
-    import gc
-    
+    """Initialize TonePilot with proper error handling but simple caching"""
     # Check for API key first
     api_key = os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY')
     if not api_key:
         return None, "No API key found! Please set GOOGLE_API_KEY or GEMINI_API_KEY in your environment variables"
     
-    try:
-        # Force garbage collection before initialization
-        gc.collect()
-        
-        from tonepilot.core.tonepilot import TonePilotEngine
-        
-        # Initialize with memory-optimized configuration
-        engine = TonePilotEngine(mode='gemini', respond=True)
-        
-        # Clear any unused imports to free memory
-        gc.collect()
-        
-        return engine, "TonePilot engine initialized successfully!"
-        
-    except ImportError as e:
+    # Get cached engine
+    engine = get_tonepilot_engine()
+    
+    if engine is None:
         return None, "TonePilot library not available. Install with: pip install tonepilot"
-    except MemoryError as e:
-        return None, "⚠️ Insufficient memory for TonePilot. Please try refreshing the page or contact support."
-    except Exception as e:
-        # Handle potential memory-related errors
-        if "memory" in str(e).lower() or "oom" in str(e).lower():
-            return None, "⚠️ Memory limit exceeded. Please refresh the page and try again."
-        return None, f"Failed to initialize TonePilot: {str(e)}"
+    
+    return engine, "TonePilot engine initialized successfully!"
 
 # Add cache clearing and memory management in sidebar
 with st.sidebar:
@@ -415,7 +404,7 @@ with st.sidebar:
         st.info("🚀 **Mobile Mode Active:** Using sample responses for faster performance!")
     
     if st.button("🗑️ Clear Cache & Restart"):
-        initialize_tonepilot.clear()
+        get_tonepilot_engine.clear()
         get_background_image.clear()
         st.cache_data.clear()
         st.cache_resource.clear()
@@ -426,10 +415,7 @@ with st.sidebar:
         st.success("Cache cleared! Please refresh the page.")
         st.rerun()
     
-    if st.button("🧹 Free Memory"):
-        import gc
-        gc.collect()
-        st.success("Memory cleaned!")
+
         
     # Cache status and memory info
     st.markdown("💾 **Cache Info:**")
@@ -444,10 +430,10 @@ with st.sidebar:
     st.markdown("🖼️ Background: Auto-cached (1hr)")
     st.markdown("🧠 AI Model: Cached when used")
     
-    st.markdown("**Memory Tips:**")
-    st.markdown("- Use Mobile Mode for better performance")
-    st.markdown("- Clear cache if app slows down")
-    st.markdown("- Background cached for 1 hour")
+    st.markdown("**Performance Tips:**")
+    st.markdown("- Use Mobile Mode for instant responses")
+    st.markdown("- AI model loads once and stays cached")
+    st.markdown("- Clear cache only if issues occur")
     
     # Mobile optimization info
     st.markdown("📱 **Mobile Optimized:**")
@@ -602,18 +588,11 @@ if generate_button:
                 st.info("💡 **Try Mobile Mode** in the sidebar for a demo without requiring API keys!")
                 result = None
             else:
-                # Process with progress indication and memory management
+                # Process with progress indication
                 with st.spinner("🤖 TonePilot is analyzing your input..."):
                     try:
-                        import gc
-                        # Free memory before processing
-                        gc.collect()
-                        
                         result = engine.run(user_input)
                         st.session_state.last_result = result
-                        
-                        # Clean up after processing
-                        gc.collect()
                         
                     except MemoryError as e:
                         st.error("❌ Memory limit exceeded. Try Mobile Mode in the sidebar for better performance.")
