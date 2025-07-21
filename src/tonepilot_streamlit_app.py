@@ -81,15 +81,15 @@ st.markdown("""
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Mobile-optimized styles for better performance */
+/* Mobile-optimized styles with dark theme */
 @media (max-width: 768px) {
     .main .block-container {
         background: rgba(255, 255, 255, 0.95);
-        border-radius: 8px;
-        padding: 1rem;
+        border-radius: 12px;
+        padding: 1.5rem;
         margin-top: 0.5rem;
-        box-shadow: none;
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
     .main-title {
@@ -112,6 +112,9 @@ st.markdown("""
         min-height: 2.5rem !important;
         font-size: 0.9rem !important;
         padding: 0.4rem 0.8rem !important;
+        background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+        border: 1px solid #0284c7 !important;
+        color: white !important;
     }
     
     .stTextArea > div > div > textarea {
@@ -120,15 +123,15 @@ st.markdown("""
     }
 }
 
-/* Ultra-lightweight mobile styles for very small screens */
+/* Ultra-sleek mobile styles for very small screens */
 @media (max-width: 480px) {
     .main .block-container {
         background: rgba(255, 255, 255, 0.98);
-        border-radius: 6px;
-        padding: 0.75rem;
-        margin-top: 0.25rem;
-        box-shadow: none;
-        border: none;
+        border-radius: 15px;
+        padding: 1.25rem;
+        margin-top: 0.5rem;
+        box-shadow: 0 6px 25px rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
     }
     
     .main-title {
@@ -144,6 +147,9 @@ st.markdown("""
         height: 2.25rem !important;
         font-size: 0.85rem !important;
         padding: 0.3rem 0.6rem !important;
+        background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+        border: 1px solid #0284c7 !important;
+        color: white !important;
     }
 }
 .main-title {
@@ -288,18 +294,18 @@ if background_image:
         min-height: 100vh;
     }}
     
-    /* Disable background image on mobile for better performance */
+    /* Sleek black background for mobile */
     @media (max-width: 768px) {{
         .stApp {{
-            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            background: linear-gradient(135deg, #000000, #1a1a1a);
             background-attachment: scroll;
         }}
     }}
     
-    /* Ultra-light background for small mobile screens */
+    /* Deep black background for small mobile screens */
     @media (max-width: 480px) {{
         .stApp {{
-            background: #f8fafc;
+            background: #000000;
         }}
     }}
     
@@ -330,7 +336,13 @@ else:
     
     @media (max-width: 768px) {
         .stApp {
-            background: #f8fafc;
+            background: linear-gradient(135deg, #000000, #1a1a1a);
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stApp {
+            background: #000000;
         }
     }
     </style>
@@ -455,7 +467,7 @@ with st.sidebar:
     if RUNNING_ON_CLOUD:
         st.markdown("- Cloud optimized for file watching issues")
         st.markdown("- Use Mobile Mode for best cloud performance")
-        st.markdown("- Background disabled on mobile for memory")
+        st.markdown("- Black theme on mobile for better performance")
     else:
         st.markdown("- Use Mobile Mode for instant responses")
         st.markdown("- AI model loads once and stays cached")
@@ -463,9 +475,10 @@ with st.sidebar:
     
     # Mobile optimization info
     st.markdown("📱 **Mobile Optimized:**")
-    st.markdown("- Lighter styling on mobile")
+    st.markdown("- Sleek black background on mobile")
+    st.markdown("- Enhanced contrast and visibility")
     st.markdown("- Sample responses for demo")
-    st.markdown("- Background disabled on small screens")
+    st.markdown("- Optimized buttons for dark theme")
 
 # Mobile sample responses (pre-written to avoid loading model)
 MOBILE_SAMPLE_RESPONSES = {
