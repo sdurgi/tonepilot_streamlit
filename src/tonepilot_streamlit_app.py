@@ -300,6 +300,27 @@ a, .stMarkdown a {
 /* Sidebar styling */
 .css-1d391kg, .css-1d391kg p, .css-1d391kg span {
     color: #ffffff !important;
+}
+
+/* Code block styling for mobile - fix white background issue */
+@media (max-width: 768px) {
+    .stCodeBlock, .stCodeBlock > div {
+        background-color: rgba(0, 0, 0, 0.8) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    .stCodeBlock code, .stCodeBlock pre {
+        color: #ffffff !important;
+        background-color: transparent !important;
+    }
+    
+    /* Also fix any text areas or code elements */
+    pre, code {
+        background-color: rgba(0, 0, 0, 0.8) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+}
     padding: 1rem;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -609,17 +630,19 @@ SAMPLE_PROMPTS = {
         "I received constructive feedback at work and I'm unsure how to implement the changes.",
         "How do I stop procrastinating and stay focused while working from home?",
         "I'm trying to learn a new skill but I keep getting frustrated with my progress."
+        "I am missing my friends and old school, I am feeling lonely"
     ],
     "Relationships": [
         "I had a disagreement with my friend and I'm not sure how to approach them about it.",
+        "I just had a huge fight with my partner and I am feeling really sad and lonely",
         "I want to have a difficult conversation with my family about boundaries.",
         "What are some emotionally intelligent ways to handle passive-aggressive coworkers?",
         "Can you help me come up with a unique birthday message for my best friend?"
     ],
     "Career & Goals": [
+        "I am scared of loosing my job because of AI",
         "I just got a promotion at work and I'm excited but also nervous about the new responsibilities.",
         "I'm considering a career change but I'm worried about the financial implications.",
-        "Help me write a professional but friendly follow-up email after a job interview.",
         "Suggest a few side hustle ideas for someone good at writing and tech."
     ],
     "Health & Lifestyle": [
@@ -632,7 +655,7 @@ SAMPLE_PROMPTS = {
         "Explain the concept of transformers in AI in simple, beginner-friendly terms.",
         "Can you generate some creative Instagram captions for travel photos?",
         "I just moved to a new city and I'm feeling lonely and disconnected.",
-        "I'm planning a surprise party for my partner and I want everything to be perfect."
+        "How do I become more creative, can you help me?"
     ]
 }
 
