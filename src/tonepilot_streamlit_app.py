@@ -73,12 +73,14 @@ st.markdown("""
 <style>
 /* Content container with optimized styling for performance */
 .main .block-container {
-    background: rgba(255, 255, 255, 0.85);
-    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 15px;
     padding: 2rem;
     margin-top: 1rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
 }
 
 /* Mobile-optimized styles with dark theme */
@@ -139,7 +141,7 @@ st.markdown("""
     }
     
     .main-subtitle {
-        font-size: 1.25rem !important;
+        font-size: 1.75rem !important;
         line-height: 1.3 !important;
     }
     
@@ -154,7 +156,7 @@ st.markdown("""
 }
 .main-title {
     text-align: center;
-    color: #1f1f1f;
+    color: #ffffff !important;
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
@@ -165,7 +167,7 @@ st.markdown("""
 }
 .main-subtitle {
     text-align: center;
-    color: #1f2937;
+    color: #ffffff !important;
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
     margin-top: -1rem;
@@ -246,6 +248,58 @@ st.markdown("""
 }
 .metric-card {
     background: white;
+}
+
+/* AGGRESSIVE TEXT FORCING - OVERRIDE ALL STREAMLIT DEFAULTS */
+* {
+    color: #ffffff !important;
+}
+
+body, html, div, p, span, h1, h2, h3, h4, h5, h6, label {
+    color: #ffffff !important;
+}
+
+.stApp, .stApp *, .main *, .block-container * {
+    color: #ffffff !important;
+}
+
+.stMarkdown, .stMarkdown *, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
+    color: #ffffff !important;
+}
+
+.stMarkdown p, .stMarkdown span, .stMarkdown div, .stMarkdown li {
+    color: #ffffff !important;
+}
+
+/* Force all text elements */
+[data-testid="stMarkdownContainer"], [data-testid="stMarkdownContainer"] * {
+    color: #ffffff !important;
+}
+
+/* Input and form styling - keep readable */
+.stTextInput > div > div > input, .stTextArea > div > div > textarea {
+    color: #1f2937 !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.stSelectbox label, .stTextInput label, .stTextArea label {
+    color: #ffffff !important;
+}
+
+/* Button text override - dark text for light button backgrounds */
+.stButton > button, .stButton > button * {
+    color: #1f2937 !important;
+}
+
+/* Links */
+a, .stMarkdown a {
+    color: #60a5fa !important;
+    text-decoration: underline;
+}
+
+/* Sidebar styling */
+.css-1d391kg, .css-1d391kg p, .css-1d391kg span {
+    color: #ffffff !important;
     padding: 1rem;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -285,6 +339,7 @@ st.markdown("""
 if background_image:
     st.markdown(f"""
     <style>
+    /* Desktop background with WHITE text for dark background */
     .stApp {{
         background: url('{background_image}');
         background-size: cover;
@@ -292,24 +347,41 @@ if background_image:
         background-repeat: no-repeat;
         background-attachment: fixed;
         min-height: 100vh;
+        color: #ffffff;
     }}
     
-    /* Sleek black background for mobile */
+    /* Desktop text styling - WHITE for dark background */
+    @media (min-width: 769px) {{
+        .stApp {{
+            color: #ffffff !important;
+        }}
+        .stMarkdown, .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {{
+            color: #ffffff !important;
+        }}
+        .stSelectbox label, .stTextInput label, .stTextArea label {{
+            color: #ffffff !important;
+        }}
+    }}
+    
+    /* ONLY mobile gets black background */
     @media (max-width: 768px) {{
         .stApp {{
-            background: linear-gradient(135deg, #000000, #1a1a1a);
-            background-attachment: scroll;
+            background: linear-gradient(135deg, #000000, #1a1a1a) !important;
+            background-attachment: scroll !important;
+            color: #ffffff !important;
         }}
     }}
     
-    /* Deep black background for small mobile screens */
+    /* Deep black for very small screens */
     @media (max-width: 480px) {{
         .stApp {{
-            background: #000000;
+            background: #000000 !important;
+            color: #ffffff !important;
         }}
     }}
     
-    /* Mobile device detection and optimization */
+    </style>
+    
     <script>
     if (window.innerWidth <= 768) {{
         document.body.classList.add('mobile-device');
@@ -323,26 +395,43 @@ if background_image:
         }}, '*');
     }}
     </script>
-    </style>
     """, unsafe_allow_html=True)
 else:
     # Fallback styling when no background image is available
     st.markdown("""
     <style>
+    /* Desktop fallback - dark theme to match */
     .stApp {
-        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        background: linear-gradient(135deg, #1e293b, #0f172a);
         min-height: 100vh;
+        color: #ffffff;
     }
     
+    /* Desktop text styling for fallback */
+    @media (min-width: 769px) {
+        .stApp {
+            color: #ffffff !important;
+        }
+        .stMarkdown, .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+            color: #ffffff !important;
+        }
+        .stSelectbox label, .stTextInput label, .stTextArea label {
+            color: #ffffff !important;
+        }
+    }
+    
+    /* ONLY mobile gets black theme */
     @media (max-width: 768px) {
         .stApp {
-            background: linear-gradient(135deg, #000000, #1a1a1a);
+            background: linear-gradient(135deg, #000000, #1a1a1a) !important;
+            color: #ffffff !important;
         }
     }
     
     @media (max-width: 480px) {
         .stApp {
-            background: #000000;
+            background: #000000 !important;
+            color: #ffffff !important;
         }
     }
     </style>
@@ -385,7 +474,7 @@ except Exception as e:
     st.markdown('<div class="centered-emoji">🧠🤖</div>', unsafe_allow_html=True)
 
 # Title and subtitle in the same container for perfect alignment
-st.markdown('<p class="main-subtitle">open-source AI library for Emotionally Aware Human-like Responses</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-subtitle">Open-Source AI library for Emotionally Aware Human-like Responses</p>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Initialize TonePilot engine with simple, effective caching
